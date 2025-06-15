@@ -1,21 +1,44 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options 
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 import datetime, time
 import sys
 import io
 import json
 import csv
+import os
 import great_expectations as gx
 import great_expectations.expectations as gxe
 import pandas as pd
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
+
+
 # setting up the webdriver to connect to chrome browser
+
 options = Options()
+service = Service(executable_path="chromedriver")
+options.add_argument("--disable-extensions")
+options.add_argument("--disable-plugins")
+options.add_argument("--disable-images")
+
+options.add_argument("--enable-features=VizDisplayCompositor")
+options.add_experimental_option("useAutomationExtension", False)
+options.add_experimental_option("excludeSwitches", ["enable-automation"])
+
+# Block images and plugins (reduces ads)
+options.add_argument("--disable-images")
+options.add_argument("--disable-plugins")
+options.add_argument("--disable-extensions-except")
+options.add_argument("--disable-plugins-discovery")
+
+# Block notifications and popups
+options.add_argument("--disable-notifications")
+options.add_argument("--disable-popup-blocking")
+
 driver = webdriver.Chrome(options=options)
 
-# creating pandas dataframe columns
 columns = ['name','type','hp','card_type','sub_type','evolves_from',
            'attacks','ex_rule','weaknesses','retreat_cost','artist',
            'card_description','id','rarity','pack','set','version','image','ability']
@@ -29,13 +52,13 @@ with open('pokemon_ptcg_data.csv', 'w') as myfile:
     reading_csv.writerow(columns)
 
 def clean_data_hyphen(pokemon_data_to_clean):
-    # print(pokemon_data_to_clean)
+    print('clean hyphne function', pokemon_data_to_clean)
 
     hyphen_count = 0
     for hyphen in pokemon_data_to_clean:
         if hyphen == '-':
             hyphen_count += 1
-            # print('hyphen count is:', hyphen_count)
+            print('hyphen count is:', hyphen_count)
         
 
     if hyphen_count == 2:
@@ -50,7 +73,7 @@ def clean_data_hyphen(pokemon_data_to_clean):
             if j == '-':
                 pokemon_type = string_without_first_hyphen[0:i]
                 pokemon_hp = string_without_first_hyphen[i+2:]
-                # print(pokemon_type)
+                print('pok type', pokemon_type)
                 # print(pokemon_hp)
 
         for i, j in enumerate(pokemon_hp):
@@ -179,17 +202,20 @@ def pokemon_card_data():
 
     try:
         card_rarity = driver.find_element(By.CLASS_NAME, value="card-text-type")
-        cleaned_rarity = clean_data_hyphen(card_rarity.text.replace('- Evolves from ', ' '))
+        cleaned_rarity = clean_data_hyphen(card_rarity.text.replace(' - Evolves from ', ' '))
         p_card_type = cleaned_rarity[0].strip()
         p_card_rarity = cleaned_rarity[1]
+        print('card type', p_card_type)
+        print('p card rarity', p_card_rarity)
         if 'Basic' not in p_card_rarity:
             for x, y in enumerate(reversed(list(p_card_rarity))):
                 if y == ' ':
                     print(y)
-                    card_rarity_done = p_card_rarity[0:x]
-                    card_type_done = p_card_rarity[x:]
+                    card_rarity_done = p_card_rarity[0:x+1]
+                    card_type_done = p_card_rarity[x+1:]
+                    print('one', card_rarity_done)
+                    print('two', card_type_done)
                     break
-            print(p_card_rarity)
             pokemon_info.extend([p_card_type, card_rarity_done.strip(), card_type_done.strip()])
 
         else:
@@ -235,41 +261,67 @@ def pokemon_card_data():
         card_attack_description = driver.find_element(By.CSS_SELECTOR, value=".card-text-section .card-text-attack-effect")
         print('card attack name', card_attack_description.text)
         print('no attack description')
-    finally:
-        pokemon_info.extend([card_attack_name_clean + ' attack points:' + card_attack_points_clean + ' attack energy:' + card_attack_energy.text + ' attack description: ' + card_attack_description.text])
 
-
-    try:
         # check if pokemon has a 2nd attack
-        second_attack = driver.find_elements(By.CLASS_NAME, value="card-text-attack-info")
-        # for thing in second_attack:
-        #     print()
-        #     print('printing second attack')
-        #     print(thing.text)
-        second_card_attack_name = second_attack[1]
-        attack_name_no_spaces = clean_attack_or_attacks(second_card_attack_name.text.strip())
-        second_attack_types = attack_name_no_spaces[0]
-        second_card_attack_name_clean = attack_name_no_spaces[1]
-        second_card_attack_points_clean = attack_name_no_spaces[2]
-        pokemon_info.extend([second_attack_types, second_card_attack_name_clean, second_card_attack_points_clean])
-    except:
-        print('no second attack')
+        try:
+            second_attack = driver.find_elements(By.CLASS_NAME, value="card-text-attack-info")
+            # for thing in second_attack:
+            #     print()
+            #     print('printing second attack')
+            #     print(thing.text)
+            second_card_attack_name = second_attack[1]
+            attack_name_no_spaces = clean_attack_or_attacks(second_card_attack_name.text.strip())
+            second_attack_types = attack_name_no_spaces[0]
+            second_card_attack_name_clean = attack_name_no_spaces[1]
+            second_card_attack_points_clean = attack_name_no_spaces[2]
+            # pokemon_info.extend([second_attack_types, second_card_attack_name_clean, second_card_attack_points_clean])
+            
 
-    else:
-        card_attack_description_two = driver.find_element(By.CLASS_NAME, value="card-text-attack-effect")
-        if card_attack_description_two != card_attack_description:
-            pokemon_info.append(card_attack_description_two.text)
+            card_attack_description_two = driver.find_element(By.CLASS_NAME, value="card-text-attack-effect")
+            if card_attack_description_two != card_attack_description:
+                pokemon_info.append(card_attack_description_two.text)
             print('second attack description', card_attack_description_two.text)
+            if second_attack:
+                pokemon_info.extend([card_attack_name_clean + ' attack points:' + card_attack_points_clean + ' attack energy:' + card_attack_energy.text + ' attack description: ' + card_attack_description.text
+                                + 'second attack name: ' + second_card_attack_name_clean + ' second attack energy' + second_attack_types + ' second attack points' + second_card_attack_points_clean 
+                                + ' attack description' + card_attack_description_two])
+        except:
+            print('did not found second attack')
+            pokemon_info.extend([card_attack_name_clean + ' attack points:' + card_attack_points_clean + ' attack energy:' + card_attack_energy.text + ' attack description: ' + card_attack_description.text])
+
+            
+    # try:
+    #     # check if pokemon has a 2nd attack
+    #     second_attack = driver.find_elements(By.CLASS_NAME, value="card-text-attack-info")
+    #     # for thing in second_attack:
+    #     #     print()
+    #     #     print('printing second attack')
+    #     #     print(thing.text)
+    #     second_card_attack_name = second_attack[1]
+    #     attack_name_no_spaces = clean_attack_or_attacks(second_card_attack_name.text.strip())
+    #     second_attack_types = attack_name_no_spaces[0]
+    #     second_card_attack_name_clean = attack_name_no_spaces[1]
+    #     second_card_attack_points_clean = attack_name_no_spaces[2]
+    #     pokemon_info.extend([second_attack_types, second_card_attack_name_clean, second_card_attack_points_clean])
+    # except:
+    #     print('no second attack')
+
+    # else:
+    #     card_attack_description_two = driver.find_element(By.CLASS_NAME, value="card-text-attack-effect")
+    #     if card_attack_description_two != card_attack_description:
+    #         pokemon_info.append(card_attack_description_two.text)
+    #         print('second attack description', card_attack_description_two.text)
 
 
     try:
         finding_ex_rule = driver.find_elements(By.CSS_SELECTOR, value="div.card-text-section p")
         ex_rule = finding_ex_rule[7].text
-        pokemon_info.append(ex_rule.replace('ex rule:', '').strip())
-        print('the ex rule:', ex_rule.strip())
+        pokemon_info.append('Yes')
+        # pokemon_info.append(ex_rule.replace('ex rule:', '').strip())
+        # print('the ex rule:', ex_rule.strip())
     except:
         print('no ex description rule')
-        pokemon_info.append('')
+        pokemon_info.append('No')
 
     try:
         pokemon_weaknes_and_retreat = driver.find_element(By.CLASS_NAME, value="card-text-wrr")
@@ -489,7 +541,7 @@ driver.get("https://pocket.limitlesstcg.com/cards")
 
 # clicking on pack of cards
 card_pack = driver.find_elements(By.TAG_NAME, value='tr')
-third_element = card_pack[3]
+third_element = card_pack[2]
 third_element.click()
 
 
@@ -505,9 +557,10 @@ counter = 0
 # loop all the cards
 for card_index in range(the_card):
     the_card = driver.find_elements(By.CSS_SELECTOR, ".card-search-grid a")
+
     
     # counter += 1
-    # if counter == 20:
+    # if counter == 2:
     #     break
         
     current_card = the_card[card_index]
@@ -517,7 +570,7 @@ for card_index in range(the_card):
     cleaned_rarity = clean_data_hyphen(card_type.text)
     p_card_type = cleaned_rarity[0].strip()
 
-    time.sleep(3)
+    # time.sleep(3)
 
     # main function calls
     if p_card_type == 'Pokémon' or p_card_type == 'Basic' or 'Stage 1' or 'Stage 2':

@@ -8,4 +8,3 @@ data = pd.read_csv("pocket_gym.csv")
 
 hello = data.replace('—', '0')
 hello.to_csv(path_or_buf='myfile')
-print(hello)
