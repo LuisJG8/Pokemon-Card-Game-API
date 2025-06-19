@@ -11,33 +11,18 @@ import os
 import great_expectations as gx
 import great_expectations.expectations as gxe
 import pandas as pd
+from pathlib import Path
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
-
 # setting up the webdriver to connect to chrome browser
-
+brave_path = r'C:\Users\luisg\AppData\Local\BraveSoftware\Brave-Browser\Application\brave.exe'
+# Setup ChromeOptions
 options = Options()
-service = Service(executable_path="chromedriver")
-options.add_argument("--disable-extensions")
-options.add_argument("--disable-plugins")
-options.add_argument("--disable-images")
-
-options.add_argument("--enable-features=VizDisplayCompositor")
-options.add_experimental_option("useAutomationExtension", False)
-options.add_experimental_option("excludeSwitches", ["enable-automation"])
-
-# Block images and plugins (reduces ads)
-options.add_argument("--disable-images")
-options.add_argument("--disable-plugins")
-options.add_argument("--disable-extensions-except")
-options.add_argument("--disable-plugins-discovery")
-
-# Block notifications and popups
-options.add_argument("--disable-notifications")
-options.add_argument("--disable-popup-blocking")
+options.binary_location = brave_path
 
 driver = webdriver.Chrome(options=options)
+
 
 columns = ['name','type','hp','card_type','sub_type','evolves_from',
            'attacks','ex_rule','weaknesses','retreat_cost','artist',
@@ -51,8 +36,9 @@ with open('pokemon_ptcg_data.csv', 'w') as myfile:
     reading_csv = csv.writer(myfile)
     reading_csv.writerow(columns)
 
+
 def clean_data_hyphen(pokemon_data_to_clean):
-    print('clean hyphne function', pokemon_data_to_clean)
+    print('clean hyphen function', pokemon_data_to_clean)
 
     hyphen_count = 0
     for hyphen in pokemon_data_to_clean:
@@ -80,8 +66,8 @@ def clean_data_hyphen(pokemon_data_to_clean):
             if j == ' ':   
                 pokemon_hp_num = pokemon_hp[0:i]
                 pokemon_hp_string = pokemon_hp[i+1:]
-                # print(pokemon_hp_num)
-                # print(pokemon_hp_string)
+                print('clean hyphen function', pokemon_hp_num)
+                print(pokemon_hp_string)
         
         return pokemon_type, pokemon_hp_num, pokemon_hp_string
 
@@ -202,7 +188,8 @@ def pokemon_card_data():
 
     try:
         card_rarity = driver.find_element(By.CLASS_NAME, value="card-text-type")
-        cleaned_rarity = clean_data_hyphen(card_rarity.text.replace(' - Evolves from ', ' '))
+        print('card rarity element is ', card_rarity)
+        cleaned_rarity = clean_data_hyphen(card_rarity.text.replace(' - Evolves from', '    '))
         p_card_type = cleaned_rarity[0].strip()
         p_card_rarity = cleaned_rarity[1]
         print('card type', p_card_type)
@@ -538,10 +525,11 @@ def trainer_card_data():
 
 time.sleep(5)
 driver.get("https://pocket.limitlesstcg.com/cards")
+# time.sleep(2)
 
 # clicking on pack of cards
 card_pack = driver.find_elements(By.TAG_NAME, value='tr')
-third_element = card_pack[2]
+third_element = card_pack[7]
 third_element.click()
 
 
@@ -556,11 +544,14 @@ the_card = len(driver.find_elements(By.CSS_SELECTOR, ".card-search-grid a"))
 counter = 0
 # loop all the cards
 for card_index in range(the_card):
+    
+    time.sleep(1)
+
     the_card = driver.find_elements(By.CSS_SELECTOR, ".card-search-grid a")
 
-    
+    # limit number of cards that are printed out
     # counter += 1
-    # if counter == 2:
+    # if counter == 26:
     #     break
         
     current_card = the_card[card_index]
@@ -570,7 +561,6 @@ for card_index in range(the_card):
     cleaned_rarity = clean_data_hyphen(card_type.text)
     p_card_type = cleaned_rarity[0].strip()
 
-    # time.sleep(3)
 
     # main function calls
     if p_card_type == 'Pokémon' or p_card_type == 'Basic' or 'Stage 1' or 'Stage 2':
@@ -579,6 +569,3 @@ for card_index in range(the_card):
         trainer_card_data()
 
     driver.back()
-
-
-    
