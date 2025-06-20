@@ -61,6 +61,7 @@ def clean_data_hyphen(pokemon_data_to_clean):
                 pokemon_hp = string_without_first_hyphen[i+2:]
                 print('pok type', pokemon_type)
                 # print(pokemon_hp)
+                break
 
         for i, j in enumerate(pokemon_hp):
             if j == ' ':   
@@ -68,6 +69,7 @@ def clean_data_hyphen(pokemon_data_to_clean):
                 pokemon_hp_string = pokemon_hp[i+1:]
                 print('clean hyphen function', pokemon_hp_num)
                 print(pokemon_hp_string)
+                break
         
         return pokemon_type, pokemon_hp_num, pokemon_hp_string
 
@@ -78,8 +80,8 @@ def clean_data_hyphen(pokemon_data_to_clean):
             if j == '-':
                 before_hyphen = pokemon_data_to_clean[0:i]
                 after_hyphen = pokemon_data_to_clean[i+2:]
-                # print(before_hyphen)
-                # print(after_hyphen)
+                print(before_hyphen)
+                print(after_hyphen)
                 break
         
         return before_hyphen, after_hyphen
@@ -188,24 +190,27 @@ def pokemon_card_data():
 
     try:
         card_rarity = driver.find_element(By.CLASS_NAME, value="card-text-type")
-        print('card rarity element is ', card_rarity)
-        cleaned_rarity = clean_data_hyphen(card_rarity.text.replace(' - Evolves from', '    '))
+        print('card rarity element is ', card_rarity.text)
+        cleaned_rarity = clean_data_hyphen(card_rarity.text.replace(' - Evolves from ', ' .    '))
         p_card_type = cleaned_rarity[0].strip()
         p_card_rarity = cleaned_rarity[1]
         print('card type', p_card_type)
         print('p card rarity', p_card_rarity)
         if 'Basic' not in p_card_rarity:
             for x, y in enumerate(reversed(list(p_card_rarity))):
-                if y == ' ':
+                if y == '.':
                     print(y)
-                    card_rarity_done = p_card_rarity[0:x+1]
-                    card_type_done = p_card_rarity[x+1:]
-                    print('one', card_rarity_done)
-                    print('two', card_type_done)
+                    card_rarity_done = p_card_rarity[0:x-1]
+                    card_type_done = p_card_rarity[x-1:]
+                    print('one\n', card_rarity_done)
+                    print('two\n', card_type_done)
                     break
-            pokemon_info.extend([p_card_type, card_rarity_done.strip(), card_type_done.strip()])
+            
+            print(p_card_type, '   ', card_rarity_done, '   ', card_type_done.strip())
+            pokemon_info.extend([p_card_type, card_rarity_done.replace('.', '').strip(), card_type_done.replace('.', '').strip()])
 
-        else:
+        elif 'Basic' in p_card_rarity:
+            print('Basic in card rarity confirmed')
             pokemon_info.extend([p_card_type, p_card_rarity])
             print('card rarity:', p_card_rarity)
             print('card type:', p_card_type)
@@ -215,6 +220,7 @@ def pokemon_card_data():
 
     try:
         evolves_from = driver.find_element(By.CSS_SELECTOR, value="p.card-text-type a")
+        print('evolves from data ', evolves_from.text)
         if 'Evolves from' in evolves_from.text:    
             pokemon_info.append(evolves_from.text.replace('Evolves from', ''))
         # print('evolves from:', evolves_from.text)
@@ -246,7 +252,7 @@ def pokemon_card_data():
 
     else:           
         card_attack_description = driver.find_element(By.CSS_SELECTOR, value=".card-text-section .card-text-attack-effect")
-        print('card attack name', card_attack_description.text)
+        print('card attack name\n', card_attack_description.text)
         print('no attack description')
 
         # check if pokemon has a 2nd attack
@@ -269,13 +275,33 @@ def pokemon_card_data():
                 pokemon_info.append(card_attack_description_two.text)
             print('second attack description', card_attack_description_two.text)
             if second_attack:
-                pokemon_info.extend([card_attack_name_clean + ' attack points:' + card_attack_points_clean + ' attack energy:' + card_attack_energy.text + ' attack description: ' + card_attack_description.text
-                                + 'second attack name: ' + second_card_attack_name_clean + ' second attack energy' + second_attack_types + ' second attack points' + second_card_attack_points_clean 
-                                + ' attack description' + card_attack_description_two])
+                list_of_attack_s_data = [
+                                            {
+                                                'name'        : card_attack_name_clean,
+                                                'damage'      : card_attack_points_clean,
+                                                'energy cost' : card_attack_energy.text,
+                                                **({'attack description': card_attack_description.text} if card_attack_description.text else {})
+                                        },
+                                        {
+                                            'name'         : second_card_attack_name_clean,
+                                            'energy cost'  : second_attack_types,
+                                            'damage'       : second_card_attack_points_clean,
+                                            'description'  : card_attack_description_two
+                                           }
+                                        ]
+                # pokemon_info.extend([card_attack_name_clean + ' attack points:' + card_attack_points_clean + ' attack energy:' + card_attack_energy.text 
+                #                      + (' attack description: ' + card_attack_description.text if card_attack_description.text else '') + 'second attack name: ' + second_card_attack_name_clean + ' second attack energy' + second_attack_types + ' second attack points' + second_card_attack_points_clean 
+                #                      + ' attack description' + card_attack_description_two])
+                pokemon_info.append(str(list_of_attack_s_data))
         except:
             print('did not found second attack')
-            pokemon_info.extend([card_attack_name_clean + ' attack points:' + card_attack_points_clean + ' attack energy:' + card_attack_energy.text + ' attack description: ' + card_attack_description.text])
-
+            only_one_attack_list = [{
+                                    'name': card_attack_name_clean,
+                                    'damage': card_attack_points_clean,
+                                    'energy': card_attack_energy.text,
+                                    **({'description': card_attack_description.text} if card_attack_description.text else {})
+                                }]
+            pokemon_info.append(str(only_one_attack_list))
             
     # try:
     #     # check if pokemon has a 2nd attack
@@ -529,7 +555,7 @@ driver.get("https://pocket.limitlesstcg.com/cards")
 
 # clicking on pack of cards
 card_pack = driver.find_elements(By.TAG_NAME, value='tr')
-third_element = card_pack[7]
+third_element = card_pack[5]
 third_element.click()
 
 
@@ -545,14 +571,14 @@ counter = 0
 # loop all the cards
 for card_index in range(the_card):
     
-    time.sleep(1)
+    time.sleep(5)
 
     the_card = driver.find_elements(By.CSS_SELECTOR, ".card-search-grid a")
 
     # limit number of cards that are printed out
-    # counter += 1
-    # if counter == 26:
-    #     break
+    counter += 1
+    if counter == 5:
+        break
         
     current_card = the_card[card_index]
     current_card.click()
