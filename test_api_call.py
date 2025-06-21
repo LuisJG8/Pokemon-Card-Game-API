@@ -122,59 +122,91 @@
 # print(hello)
 
 
-mys = 'Pokémon - Stage 1 - Evolves from Rowlet'
+# mys = 'Pokémon - Stage 1 - Evolves from Rowlet'
 
-def clean_data_hyphen(pokemon_data_to_clean):
-    print('clean hyphne function', pokemon_data_to_clean)
+# def clean_data_hyphen(pokemon_data_to_clean):
+#     print('clean hyphne function', pokemon_data_to_clean)
 
-    hyphen_count = 0
-    for hyphen in pokemon_data_to_clean:
-        if hyphen == '-':
-            hyphen_count += 1
-            print('hyphen count is:', hyphen_count)
+#     hyphen_count = 0
+#     for hyphen in pokemon_data_to_clean:
+#         if hyphen == '-':
+#             hyphen_count += 1
+#             print('hyphen count is:', hyphen_count)
         
 
-    if hyphen_count == 2:
-        for i, j in enumerate(pokemon_data_to_clean):
-            if j == '-':
-                first_hyphen = pokemon_data_to_clean[i:]
-                break
+#     if hyphen_count == 2:
+#         for i, j in enumerate(pokemon_data_to_clean):
+#             if j == '-':
+#                 first_hyphen = pokemon_data_to_clean[i:]
+#                 break
 
-        string_without_first_hyphen = first_hyphen.strip('- ')
+#         string_without_first_hyphen = first_hyphen.strip('- ')
 
-        for i, j in enumerate(string_without_first_hyphen):
-            if j == '-':
-                pokemon_type = string_without_first_hyphen[0:i]
-                pokemon_hp = string_without_first_hyphen[i+2:]
-                print(pokemon_type)
-                print(pokemon_hp)
+#         for i, j in enumerate(string_without_first_hyphen):
+#             if j == '-':
+#                 pokemon_type = string_without_first_hyphen[0:i]
+#                 pokemon_hp = string_without_first_hyphen[i+2:]
+#                 print(pokemon_type)
+#                 print(pokemon_hp)
 
-        for i, j in enumerate(pokemon_hp):
-            if j == ' ':   
-                pokemon_hp_num = pokemon_hp[0:i]
-                pokemon_hp_string = pokemon_hp[i+1:]
-                print(pokemon_hp_num)
-                print(pokemon_hp_string)
+#         for i, j in enumerate(pokemon_hp):
+#             if j == ' ':   
+#                 pokemon_hp_num = pokemon_hp[0:i]
+#                 pokemon_hp_string = pokemon_hp[i+1:]
+#                 print(pokemon_hp_num)
+#                 print(pokemon_hp_string)
         
-        return pokemon_type, pokemon_hp_num, pokemon_hp_string
+#         return pokemon_type, pokemon_hp_num, pokemon_hp_string
 
 
-    elif hyphen_count == 1:
+#     elif hyphen_count == 1:
         
-        for i, j in enumerate(pokemon_data_to_clean):
-            if j == '-':
-                before_hyphen = pokemon_data_to_clean[0:i]
-                after_hyphen = pokemon_data_to_clean[i+2:]
-                # print(before_hyphen)
-                # print(after_hyphen)
-                break
+#         for i, j in enumerate(pokemon_data_to_clean):
+#             if j == '-':
+#                 before_hyphen = pokemon_data_to_clean[0:i]
+#                 after_hyphen = pokemon_data_to_clean[i+2:]
+#                 # print(before_hyphen)
+#                 # print(after_hyphen)
+#                 break
         
-        return before_hyphen, after_hyphen
+#         return before_hyphen, after_hyphen
 
 
-hello = clean_data_hyphen(mys)
-cleaned_rarity = clean_data_hyphen(hello.replace(' - Evolves from ', ' '))
-print()
-print(hello[0])
-print(hello[1])
-print(hello[2])
+# hello = clean_data_hyphen(mys)
+# cleaned_rarity = clean_data_hyphen(hello.replace(' - Evolves from ', ' '))
+# print()
+# print(hello[0])
+# print(hello[1])
+# print(hello[2])
+
+
+mylist = []
+
+card_attack_name_clean = 'Tackle'
+card_attack_points_clean = 5
+desc = 'It does a big tackle'
+card_attack_energy = 'GG'
+
+
+second_card_attack_name_clean = 'Surf'
+second_card_attack_points_clean = 100
+card_attack_description_two = 'It does surf'
+second_attack_types = 'WW'
+
+
+list_of_attack_data = [{
+                        'name'  : card_attack_name_clean,
+                        'damage': card_attack_points_clean,
+                        'energy cost': card_attack_energy
+                        },
+                        # (' attack description: ' + card_attack_description.text if card_attack_description.text else ''),
+                        {
+                        'name': second_card_attack_name_clean,
+                        'energy cost'  : second_attack_types,
+                        'damage'       : second_card_attack_points_clean,
+                        'description ' : card_attack_description_two
+                        }
+                        ]
+newlist = []
+
+print(list_of_attack_data)

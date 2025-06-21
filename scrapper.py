@@ -24,17 +24,16 @@ options.binary_location = brave_path
 driver = webdriver.Chrome(options=options)
 
 
+# csv file setup
 columns = ['name','type','hp','card_type','sub_type','evolves_from',
            'attacks','ex_rule','weaknesses','retreat_cost','artist',
            'card_description','id','rarity','pack','set','version','image','ability']
 
-
-# name,type,hp,card_type,sub_type,attacks,weaknesses,retreat_cost,artist,card_description,set,id,rarity,pack,versions,evolves_from,ex_rule,image,ability
-
-
-with open('pokemon_ptcg_data.csv', 'w') as myfile:
+ 
+with open('data/pokemon_ptcg_data.csv', 'w', newline='') as myfile:
     reading_csv = csv.writer(myfile)
     reading_csv.writerow(columns)
+
 
 
 def clean_data_hyphen(pokemon_data_to_clean):
@@ -85,6 +84,7 @@ def clean_data_hyphen(pokemon_data_to_clean):
                 break
         
         return before_hyphen, after_hyphen
+
 
 def clean_name_symbols_and_packs(pokemon_n_s_p_to_clean):
     print('this is the param\n', pokemon_n_s_p_to_clean) 
@@ -277,12 +277,12 @@ def pokemon_card_data():
             if second_attack:
                 list_of_attack_s_data = [
                                             {
-                                                'name'        : card_attack_name_clean,
-                                                'damage'      : card_attack_points_clean,
-                                                'energy cost' : card_attack_energy.text,
-                                                **({'attack description': card_attack_description.text} if card_attack_description.text else {})
-                                        },
-                                        {
+                                             'name'        : card_attack_name_clean,
+                                             'damage'      : card_attack_points_clean,
+                                             'energy cost' : card_attack_energy.text,
+                                             **({'attack description': card_attack_description.text} if card_attack_description.text else {})
+                                           },
+                                           {
                                             'name'         : second_card_attack_name_clean,
                                             'energy cost'  : second_attack_types,
                                             'damage'       : second_card_attack_points_clean,
@@ -334,7 +334,7 @@ def pokemon_card_data():
         # print('the ex rule:', ex_rule.strip())
     except:
         print('no ex description rule')
-        pokemon_info.append('No')
+        pokemon_info.append('NoExRule')
 
     try:
         pokemon_weaknes_and_retreat = driver.find_element(By.CLASS_NAME, value="card-text-wrr")
@@ -444,8 +444,9 @@ def pokemon_card_data():
     for data_point in pokemon_info:
         print(data_point)
     print()   
+
     
-    with open('pokemon_ptcg_data.csv', 'a', encoding='utf-8', newline='') as myfile:
+    with open('data/pokemon_ptcg_data.csv', 'a', encoding='utf-8', newline='') as myfile:
         reading_csv = csv.writer(myfile)
         reading_csv.writerow(pokemon_info)
 
@@ -468,19 +469,21 @@ def trainer_card_data():
 
     try:
         card_rarity = driver.find_element(By.CLASS_NAME, value="card-text-type")
+        print('this is the card rarity: ', card_rarity.text)
         cleaned_rarity = clean_data_hyphen(card_rarity.text)
         p_card_type = cleaned_rarity[0]
         p_card_rarity = cleaned_rarity[1]
         trainer_info.extend([p_card_type, p_card_rarity])
-        # print('card rarity:', p_card_rarity)
-        # print('card type:', p_card_type)
+        print('card rarity:', p_card_rarity)
+        print('card type:', p_card_type)
     except:
         print('no card rarity')
         trainer_info.append('')
 
 
     try:                                                                              
-        item_effect = driver.find_elements(By.CLASS_NAME, value="card-text-section") 
+        item_effect = driver.find_element(By.CSS_SELECTOR, value="div .card-text-section") 
+        print('this is the item effect: ', item_effect)
         second_element = item_effect[1]                                               
         print('item effect:', second_element.text)                                 
         trainer_info.append(second_element.text)                                           
@@ -541,6 +544,11 @@ def trainer_card_data():
         print('no image')
         trainer_info.append('')
 
+
+    with open('data/pokemon_ptcg_data.csv', 'a', encoding='utf-8', newline='') as myfile:
+        reading_csv = csv.writer(myfile)
+        reading_csv.writerow(trainer_info)
+
     print('\npokemon information:')
     for data_point in trainer_info:
         print(data_point)
@@ -569,15 +577,15 @@ the_card = len(driver.find_elements(By.CSS_SELECTOR, ".card-search-grid a"))
 
 counter = 0
 # loop all the cards
-for card_index in range(the_card):
+for card_index in range(71, the_card):
     
-    time.sleep(5)
+    time.sleep(3)
 
     the_card = driver.find_elements(By.CSS_SELECTOR, ".card-search-grid a")
 
     # limit number of cards that are printed out
     counter += 1
-    if counter == 5:
+    if counter == 4:
         break
         
     current_card = the_card[card_index]
@@ -586,12 +594,14 @@ for card_index in range(the_card):
     card_type = driver.find_element(By.CLASS_NAME, value="card-text-type")
     cleaned_rarity = clean_data_hyphen(card_type.text)
     p_card_type = cleaned_rarity[0].strip()
-
+    print('THIS IS THE P CARD TYPE: ', p_card_type)
 
     # main function calls
-    if p_card_type == 'Pokémon' or p_card_type == 'Basic' or 'Stage 1' or 'Stage 2':
+    if p_card_type == 'Pokémon' or p_card_type == 'Basic':
+        print('in the pokemon type card function')
         pokemon_card_data()
-    elif p_card_type == 'Trainer' or p_card_type == 'Item':
+    if p_card_type == 'Trainer' or p_card_type == 'Item' or p_card_type == "Supporter":
+        print('in the trainer type card function')
         trainer_card_data()
 
     driver.back()
