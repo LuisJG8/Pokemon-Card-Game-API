@@ -50,7 +50,7 @@ rarity_types = ['◊', '◊◊', '◊◊◊', '◊◊◊◊', '☆', '☆☆', '
 # csv file setup
 columns = ['name','type','hp','card_type','sub_type','evolves_from',
            'attacks','ex_rule','weaknesses','retreat_cost','artist',
-           'card_description','set','id','rarity','pack','version','image','ability']
+           'card_description','set','id','rarity','pack','versions','image','ability']
 
  
 with open('./database/data/pokemon_ptcg_data.csv', 'w', newline='') as myfile:
@@ -473,7 +473,7 @@ def pokemon_card_data(pokemon_or_trainer):
             print('pokemon rarity with symbols three: ', pokemon_rarity_with_symbols)
             print('pokemon pack name three:', pokemon_pack_name)
             if pokemon_rarity_with_symbols not in rarity_types:
-                pokemon_info.extend([str(card_id_pack) + '-' + pokemon_card_number, pokemon_rarity_with_symbols + ' ' + pokemon_pack_name]) 
+                pokemon_info.extend([str(card_id_pack) + '-' + pokemon_card_number, '', pokemon_rarity_with_symbols + ' ' + pokemon_pack_name]) 
             else:
                 pokemon_info.extend([str(card_id_pack) + '-' + str(pokemon_card_number), pokemon_rarity_with_symbols, pokemon_pack_name]) 
         
@@ -482,9 +482,11 @@ def pokemon_card_data(pokemon_or_trainer):
             pokemon_rarity_with_symbols = cleaning_the_data[1]
             print('pokemon card number:', pokemon_card_number)
             print('pokemon rarity with symbols:', pokemon_rarity_with_symbols)
-            pokemon_info.extend([str(card_id_pack) + '-' + str(pokemon_card_number), pokemon_rarity_with_symbols.strip(), '']) 
+            if pokemon_rarity_with_symbols not in rarity_types:
+                pokemon_info.extend([str(card_id_pack) + '-' + pokemon_card_number, '', '']) 
+            else:
+                pokemon_info.extend([str(card_id_pack) + '-' + str(pokemon_card_number), pokemon_rarity_with_symbols, '']) 
 
-        # print('pokemon_pack_name:', pokemon_pack_name)
     except:
         print('no pokemon card number or rarity or name pack')  
         pokemon_info.extend(['', '', ''])
@@ -492,8 +494,8 @@ def pokemon_card_data(pokemon_or_trainer):
 
     try:
         pokemon_versions = driver.find_element(By.CLASS_NAME, value="card-prints .card-prints-versions") 
+        print(pokemon_versions.text)
         pokemon_info.append(pokemon_versions.text.replace('VERSIONS\n', '').replace('\n', ' '))
-        # print(pokemon_versions.text)
     except:
         print('there are not other versions')   
         pokemon_info.append('')
@@ -501,6 +503,7 @@ def pokemon_card_data(pokemon_or_trainer):
 
     try:
         pokemon_image = driver.find_element(By.CSS_SELECTOR, value=".card-image img")  
+        print('this is the pokemon image', pokemon_image.text)
         # pokemon_info.append(pokemon_image.text)
         actual_image = pokemon_image.get_attribute("src")
         pokemon_info.append(actual_image)
@@ -540,7 +543,6 @@ def pokemon_card_data(pokemon_or_trainer):
 
 
 
-
 if __name__ == '__main__':
 
     time.sleep(5)
@@ -571,7 +573,7 @@ if __name__ == '__main__':
 
         # limit number of cards that are printed out
         # counter += 1
-        # if counter == 2:
+        # if counter == 7:
         #     break
             
         current_card = the_card[card_index]
