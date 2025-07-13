@@ -1,16 +1,23 @@
 from typing import Annotated
-
 from fastapi import FastAPI, Path, Query
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database.models import *
+from pydantic import BaseModel
+
+
+# Pydantic model
+class Card(BaseModel):
+    pokemon_name: str 
+    pack_name: str 
+
 
 app = FastAPI()
 
+@app.get("/cards")
+async def get_card_data():
+    print(idk)
 
-@app.get("/items/{item_id}")
-async def read_items(
-    item_id: Annotated[int, Path(title="The ID of the item to get")],
-    q: Annotated[str | None, Query(alias="item-query")] = None,
-):
-    results = {"item_id": item_id}
-    if q:
-        results.update({"q": q})
-    return results
+
+

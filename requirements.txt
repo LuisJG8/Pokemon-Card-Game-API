@@ -1,1 +1,6 @@
 SQLAlchemy>=1.4
+pandas
+psycorg2
+pydantic
+sqlalchemy_utils
+selenium

@@ -8,8 +8,6 @@ import io
 import json
 import csv
 import os
-import great_expectations as gx
-import great_expectations.expectations as gxe
 import pandas as pd
 from pathlib import Path
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -45,7 +43,7 @@ pokemon_types = {
     'H': 'Ground'
 }
 
-rarity_types = ['◊', '◊◊', '◊◊◊', '◊◊◊◊', '☆', '☆☆', '☆☆', 'Crown Rare']
+rarity_types = ['◊', '◊◊', '◊◊◊', '◊◊◊◊', '☆', '☆☆', '☆☆', '☆☆☆', 'Crown Rare']
 
 # csv file setup
 columns = ['name','type','hp','card_type','sub_type','evolves_from',
@@ -53,7 +51,7 @@ columns = ['name','type','hp','card_type','sub_type','evolves_from',
            'card_description','set','id','rarity','pack','versions','image','ability']
 
  
-with open('./database/data/pokemon_ptcg_data.csv', 'w', newline='') as myfile:
+with open('./data/pokemon_ptcg_data.csv', 'w', newline='') as myfile:
     reading_csv = csv.writer(myfile)
     reading_csv.writerow(columns)
 
@@ -472,20 +470,20 @@ def pokemon_card_data(pokemon_or_trainer):
             print('pokemon card number three:', pokemon_card_number)
             print('pokemon rarity with symbols three: ', pokemon_rarity_with_symbols)
             print('pokemon pack name three:', pokemon_pack_name)
-            if pokemon_rarity_with_symbols not in rarity_types:
-                pokemon_info.extend([str(card_id_pack) + '-' + pokemon_card_number, '', pokemon_rarity_with_symbols + ' ' + pokemon_pack_name]) 
+            if pokemon_rarity_with_symbols.strip() not in rarity_types:
+                pokemon_info.extend([str(card_id_pack) + '-' + pokemon_card_number, '', pokemon_rarity_with_symbols.strip(), pokemon_pack_name]) 
             else:
-                pokemon_info.extend([str(card_id_pack) + '-' + str(pokemon_card_number), pokemon_rarity_with_symbols, pokemon_pack_name]) 
+                pokemon_info.extend([str(card_id_pack) + '-' + str(pokemon_card_number), pokemon_rarity_with_symbols.strip(), pokemon_pack_name]) 
         
         elif 'pack' not in pokemon_num_in_pack.text:
             pokemon_card_number = cleaning_the_data[0][1:].strip()
             pokemon_rarity_with_symbols = cleaning_the_data[1]
             print('pokemon card number:', pokemon_card_number)
             print('pokemon rarity with symbols:', pokemon_rarity_with_symbols)
-            if pokemon_rarity_with_symbols not in rarity_types:
+            if pokemon_rarity_with_symbols.strip() not in rarity_types:
                 pokemon_info.extend([str(card_id_pack) + '-' + pokemon_card_number, '', '']) 
             else:
-                pokemon_info.extend([str(card_id_pack) + '-' + str(pokemon_card_number), pokemon_rarity_with_symbols, '']) 
+                pokemon_info.extend([str(card_id_pack) + '-' + str(pokemon_card_number), pokemon_rarity_with_symbols.strip(), '']) 
 
     except:
         print('no pokemon card number or rarity or name pack')  
@@ -495,7 +493,29 @@ def pokemon_card_data(pokemon_or_trainer):
     try:
         pokemon_versions = driver.find_element(By.CLASS_NAME, value="card-prints .card-prints-versions") 
         print(pokemon_versions.text)
-        pokemon_info.append(pokemon_versions.text.replace('VERSIONS\n', '').replace('\n', ' '))
+        cleaned_versions_list = pokemon_versions.text.replace('VERSIONS\n', '').replace('\n', ', ')
+
+        split_versions_list = cleaned_versions_list.split(',')
+
+        new_versions_list = [thing.strip() for thing in split_versions_list]
+
+        print(new_versions_list)
+
+        pokemon_versions = []
+        for index, my_string in enumerate(new_versions_list):
+            print('index', index, 'the len', len(new_versions_list))
+            if my_string.strip() in rarity_types:
+                string_before = new_versions_list[index-1]
+                pokemon_versions.extend([string_before + ' ' + my_string])
+            elif my_string.strip() not in rarity_types and index < len(new_versions_list) - 1 and new_versions_list[index+1] not in rarity_types:
+                pokemon_versions.append(my_string)
+            else:
+                print('idk')
+            print(pokemon_versions)
+        print('outside', pokemon_versions)
+
+        pokemon_info.append(pokemon_versions)
+
     except:
         print('there are not other versions')   
         pokemon_info.append('')
@@ -533,7 +553,7 @@ def pokemon_card_data(pokemon_or_trainer):
     print()   
 
     
-    with open('./database/data/pokemon_ptcg_data.csv', 'a', encoding='utf-8', newline='') as myfile:
+    with open('./data/pokemon_ptcg_data.csv', 'a', encoding='utf-8', newline='') as myfile:
         reading_csv = csv.writer(myfile)
         reading_csv.writerow(pokemon_info)
 
@@ -573,7 +593,7 @@ if __name__ == '__main__':
 
         # limit number of cards that are printed out
         # counter += 1
-        # if counter == 7:
+        # if counter == 8:
         #     break
             
         current_card = the_card[card_index]
