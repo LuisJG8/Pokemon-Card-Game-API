@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 
-SQLALCHEMY_DATABASE_URL = 'postgresql://postgres:HelloWorld12@localhost:5432/pokemon_pocket_tcg'
+SQLALCHEMY_DATABASE_URL = 'postgres_connection'
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
