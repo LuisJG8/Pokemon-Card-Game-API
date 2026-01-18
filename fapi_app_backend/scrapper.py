@@ -50,11 +50,16 @@ columns = ['name','type','hp','card_type','sub_type','evolves_from',
            'attacks','ex_rule','weaknesses','retreat_cost','artist',
            'card_description','set','id','rarity','pack','versions','image','ability']
 
- 
-with open('./data/pokemon_ptcg_data.csv', 'w', newline='') as myfile:
-    reading_csv = csv.writer(myfile)
-    reading_csv.writerow(columns)
 
+if not os.path.exists('./data/pokemon_ptcg_data.csv'):
+    os.makedirs('./data', exist_ok=True)
+    with open('./data/pokemon_ptcg_data.csv', 'a', newline='') as myfile:
+        reading_csv = csv.writer(myfile)
+        reading_csv.writerow(columns)
+    print('created the csv file with the columns')
+else:
+    print('CSV file already exists, skipping adding the columns')
+    
 
 
 def clean_data_hyphen(pokemon_data_to_clean):
@@ -471,7 +476,12 @@ def pokemon_card_data(pokemon_or_trainer):
             print('pokemon rarity with symbols three: ', pokemon_rarity_with_symbols)
             print('pokemon pack name three:', pokemon_pack_name)
             if pokemon_rarity_with_symbols.strip() not in rarity_types:
-                pokemon_info.extend([str(card_id_pack) + '-' + pokemon_card_number, '', pokemon_rarity_with_symbols.strip(), pokemon_pack_name]) 
+                if pokemon_rarity_with_symbols.strip() == 'Promo':
+                    pokemon_info.extend([str(card_id_pack) + '-' + pokemon_card_number, '', pokemon_rarity_with_symbols.strip()]) 
+                elif pokemon_rarity_with_symbols.strip() == 'Crown':
+                    pokemon_info.extend([str(card_id_pack) + '-' + str(pokemon_card_number), 'Crown Rare', pokemon_pack_name[5:]]) 
+                else:    
+                    pokemon_info.extend([str(card_id_pack) + '-' + pokemon_card_number, '', pokemon_rarity_with_symbols.strip(), pokemon_pack_name]) 
             else:
                 pokemon_info.extend([str(card_id_pack) + '-' + str(pokemon_card_number), pokemon_rarity_with_symbols.strip(), pokemon_pack_name]) 
         
@@ -510,11 +520,16 @@ def pokemon_card_data(pokemon_or_trainer):
             elif my_string.strip() not in rarity_types and index < len(new_versions_list) - 1 and new_versions_list[index+1] not in rarity_types:
                 pokemon_versions.append(my_string)
             else:
-                print('idk')
+                print('')
             print(pokemon_versions)
+
         print('outside', pokemon_versions)
 
-        pokemon_info.append(pokemon_versions)
+        if len(pokemon_versions) > 0:
+            pokemon_info.append(pokemon_versions)
+        else:
+            print('there are not other versions')   
+            pokemon_info.append('')
 
     except:
         print('there are not other versions')   
@@ -565,21 +580,27 @@ def pokemon_card_data(pokemon_or_trainer):
 
 if __name__ == '__main__':
 
-    time.sleep(5)
+    time.sleep(7)
     driver.get("https://pocket.limitlesstcg.com/cards")
     # time.sleep(2)
 
     # clicking on pack of cards
     card_pack = driver.find_elements(By.TAG_NAME, value='tr')
-    third_element = card_pack[10]
+
+    count = 0
+    for thing in card_pack:
+        count += 1
+        print('pack numba is ', count, '\n', thing.text)
+
+    third_element = card_pack[-2]
     third_element.click()
 
 
     the_card = len(driver.find_elements(By.CSS_SELECTOR, ".card-search-grid a"))
     # select one card
-    # pokemon_card = the_card[66]
+    # pokemon_card = the_card[85]
     # pokemon_card.click()
-    # trainer_card_data()
+    # pokemon_card_data(pokemon_or_trainer=pokemon_card)
     # time.sleep(8)
 
 
