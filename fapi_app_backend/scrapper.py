@@ -14,7 +14,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 # setting up the webdriver to connect to chrome browser
-brave_path = r'C:\Users\luisg\AppData\Local\BraveSoftware\Brave-Browser\Application\brave.exe'
+brave_path = 'brave_path_in_your_pc'
 # Setup ChromeOptions
 options = Options()
 options.binary_location = brave_path
